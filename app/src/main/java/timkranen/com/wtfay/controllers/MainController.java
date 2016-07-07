@@ -1,6 +1,7 @@
 package timkranen.com.wtfay.controllers;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,10 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 import timkranen.com.wtfay.R;
+import timkranen.com.wtfay.domain.model.services.bing.Image;
+import timkranen.com.wtfay.domain.model.services.bing.ImageResult;
+import timkranen.com.wtfay.services.RestAdapter;
+import timkranen.com.wtfay.services.bing.image_search.ImageSearchService;
 import timkranen.com.wtfay.services.test.SimpleTestService;
 import timkranen.com.wtfay.services.test.TestAdapter;
 import timkranen.com.wtfay.services.test.model.Post;
@@ -44,17 +49,11 @@ public class MainController extends Controller {
     }
 
     private void onViewBound(View view) {
-        SimpleTestService testService = TestAdapter.createService();
-        testService.getPosts()
+        ImageSearchService imageSearchService = RestAdapter.getDebugAdapter(ImageSearchService.class, ImageSearchService.BASE_URL);
+        imageSearchService.search(ImageSearchService.API_KEY, "Los Angeles")
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .flatMap(new Func1<List<Post>, Observable<Post>>() {
-                    @Override
-                    public Observable<Post> call(List<Post> posts) {
-                        return Observable.from(posts);
-                    }
-                })
-                .subscribe(new Observer<Post>() {
+                .subscribe(new Observer<ImageResult>() {
                     @Override
                     public void onCompleted() {
 
@@ -62,14 +61,14 @@ public class MainController extends Controller {
 
                     @Override
                     public void onError(Throwable e) {
-                        e.printStackTrace();
+
                     }
 
                     @Override
-                    public void onNext(Post post) {
-                        String text = testText.getText().toString();
-                        text += post.getBody();
-                        testText.setText(text);
+                    public void onNext(ImageResult imageResult) {
+                        for(Image image : imageResult.getImages()) {
+                            Log.d("imageresult", image.getImageUrl());
+                        }
                     }
                 });
     }
