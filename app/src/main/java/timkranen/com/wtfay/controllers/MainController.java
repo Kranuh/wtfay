@@ -1,11 +1,13 @@
 package timkranen.com.wtfay.controllers;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.view.animation.GridLayoutAnimationController;
+import android.view.animation.LayoutAnimationController;
 
 import com.bluelinelabs.conductor.Controller;
 
@@ -14,63 +16,61 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import rx.Observable;
-import rx.Observer;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 import timkranen.com.wtfay.R;
 import timkranen.com.wtfay.domain.model.services.bing.Image;
-import timkranen.com.wtfay.domain.model.services.bing.ImageResult;
-import timkranen.com.wtfay.services.RestAdapter;
-import timkranen.com.wtfay.services.bing.image_search.ImageSearchService;
-import timkranen.com.wtfay.services.test.SimpleTestService;
-import timkranen.com.wtfay.services.test.TestAdapter;
-import timkranen.com.wtfay.services.test.model.Post;
+import timkranen.com.wtfay.recyclerview.adapters.BaseResultAdapter;
+import timkranen.com.wtfay.services.bing.image_search.ImageSearchController;
+import timkranen.com.wtfay.services.bing.image_search.OnImageFetchedListener;
 
 /**
  * Created by tim on 6/29/16.
  */
 public class MainController extends Controller {
 
-    @BindView(R.id.test_text)
-    TextView testText;
-
     private Unbinder unbinder;
+
+    protected @BindView(R.id.result_recycler_view) RecyclerView resultRecyclerView;
 
     @NonNull
     @Override
     protected View onCreateView(@NonNull LayoutInflater inflater, @NonNull ViewGroup container) {
-        View contentView = inflater.inflate(R.layout.test_controller, container, false);
+        View contentView = inflater.inflate(R.layout.main_controller, container, false);
         unbinder = ButterKnife.bind(this, contentView);
         onViewBound(contentView);
         return contentView;
     }
 
     private void onViewBound(View view) {
-        ImageSearchService imageSearchService = RestAdapter.getDebugAdapter(ImageSearchService.class, ImageSearchService.BASE_URL);
-        imageSearchService.search(ImageSearchService.API_KEY, "Los Angeles")
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<ImageResult>() {
-                    @Override
-                    public void onCompleted() {
+        setupResultView();
+        startImageQuery("Los Angeles");
+    }
 
-                    }
+    private void setupResultView() {
+        StaggeredGridLayoutManager gridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
+        resultRecyclerView.setLayoutManager(gridLayoutManager);
+    }
 
-                    @Override
-                    public void onError(Throwable e) {
+    private void startImageQuery(String query) {
+        ImageSearchController.fetchImages(new OnImageFetchedListener() {
+            @Override
+            public void onImagesFetched(List<Image> result, String query) {
+                onBingImagesFetched(result);
+            }
 
-                    }
+            @Override
+            public void onNoResult() {
+                //todo do onResult stuff for images
+            }
 
-                    @Override
-                    public void onNext(ImageResult imageResult) {
-                        for(Image image : imageResult.getImages()) {
-                            Log.d("imageresult", image.getImageUrl());
-                        }
-                    }
-                });
+            @Override
+            public void onImageFetchFailed(Throwable e) {
+                //todo if no cache, image fetch failed, if cache display cache
+            }
+        }, query);
+    }
+
+    private void onBingImagesFetched(List<Image> images) {
+        this.resultRecyclerView.setAdapter(new BaseResultAdapter(getApplicationContext(), images));
     }
 
     @Override
