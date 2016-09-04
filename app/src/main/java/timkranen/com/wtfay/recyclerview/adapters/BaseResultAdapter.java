@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -28,6 +29,7 @@ public class BaseResultAdapter extends RecyclerView.Adapter<ServiceResultViewHol
     private List<? extends ServiceResult> resultList;
     private Context context;
     private final Random random = new Random();
+    private final HashMap<Integer, Integer> randomPositionMap = new HashMap<>();
 
     public BaseResultAdapter(Context context, List<? extends ServiceResult> resultList) {
         this.resultList = resultList;
@@ -69,7 +71,7 @@ public class BaseResultAdapter extends RecyclerView.Adapter<ServiceResultViewHol
                 onBindBingImageSmall((SmallBingImageViewHolder) holder, position);
                 break;
             case BING_IMAGE_MEDIUM:
-                onBindBingImageMedium((MediumBingImageViewHolder) holder, position, getRandomPosition());
+                onBindBingImageMedium((MediumBingImageViewHolder) holder, position, getRandomPosition(position));
                 break;
             case BING_IMAGE_LARGE:
                 onBindBingImageLarge((LargeBingImageViewHolder) holder, position);
@@ -77,9 +79,19 @@ public class BaseResultAdapter extends RecyclerView.Adapter<ServiceResultViewHol
         }
     }
 
-    private int getRandomPosition() {
-        int max = resultList.size();
-        return random.nextInt(max);
+    /**
+     * Gets random item position for a view that holds
+     * more then one object, caches this so that it doesn't
+     * change while scrolling
+     */
+    private int getRandomPosition(int forPosition) {
+        if(randomPositionMap.containsKey(forPosition)) {
+            return randomPositionMap.get(forPosition);
+        } else {
+            int rand = random.nextInt(resultList.size());
+            randomPositionMap.put(forPosition, rand);
+            return rand;
+        }
     }
 
     private void onBindBingImageSmall(SmallBingImageViewHolder holder, int position) {
