@@ -6,8 +6,6 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.GridLayoutAnimationController;
-import android.view.animation.LayoutAnimationController;
 
 import com.bluelinelabs.conductor.Controller;
 
@@ -21,6 +19,7 @@ import timkranen.com.wtfay.domain.model.services.bing.Image;
 import timkranen.com.wtfay.recyclerview.adapters.BaseResultAdapter;
 import timkranen.com.wtfay.services.bing.image_search.ImageSearchController;
 import timkranen.com.wtfay.services.bing.image_search.OnImageFetchedListener;
+import timkranen.com.wtfay.views.main_page.SearchLocationView;
 
 /**
  * Created by tim on 6/29/16.
@@ -29,7 +28,12 @@ public class MainController extends Controller {
 
     private Unbinder unbinder;
 
-    protected @BindView(R.id.result_recycler_view) RecyclerView resultRecyclerView;
+    protected
+    @BindView(R.id.result_recycler_view)
+    RecyclerView resultRecyclerView;
+    protected
+    @BindView(R.id.search_location_view)
+    SearchLocationView searchLocationView;
 
     @NonNull
     @Override
@@ -43,6 +47,14 @@ public class MainController extends Controller {
     private void onViewBound(View view) {
         setupResultView();
         startImageQuery("Los Angeles");
+
+        resultRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                searchLocationView.scrollBottom(dy);
+            }
+        });
+        searchLocationView.setLatchView(resultRecyclerView);
     }
 
     private void setupResultView() {

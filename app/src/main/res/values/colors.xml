@@ -4,4 +4,6 @@
     <color name="colorSecondary">#455A64</color>
     <color name="colorAccent">#64FFDA</color>
     <color name="black">#000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black_transparent_80">#80000000</color>
 </resources>
